@@ -21,7 +21,7 @@ public class PlayerCharacter : MonoBehaviour
 
 
     [Header("Gravity Settings")]
-    
+
     float _normalGravity = 9.81f;
     [SerializeField] float _fallingGravity = 12f;
     [SerializeField] float _snapToGround = 1f;
@@ -33,6 +33,16 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] LayerMask _groundLayer;
 
     bool _isGrounded;
+
+
+    [Header("Wall Check Settings")]
+    [SerializeField] Vector2 _wallCheckOffset = new Vector2(0f, 1f);
+    [SerializeField] float _wallCheckDistance = 0.6f;
+    [SerializeField] float _wallCheckSpacing = 0.4f;
+    [SerializeField] LayerMask _obstacleLayer;
+
+    bool _isWallRight;
+    bool _isWallLeft;
 
 
     [Header("Ability Settings")]
@@ -49,13 +59,17 @@ public class PlayerCharacter : MonoBehaviour
 
     }
 
-    
+
 
 
     void Update()
     {
         bool lastGroundedState = _isGrounded;
         _isGrounded = CheckGrounded();
+
+        _isWallRight = CheckWall(Vector2.right);
+        _isWallLeft = CheckWall(Vector2.left);
+
         if (_isJumping && _isGrounded)
         {
             // _isGrounded = false;
@@ -86,7 +100,12 @@ public class PlayerCharacter : MonoBehaviour
         // if _isWallRight && _moveInput.x > 0, then velocity.x = 0
         // pareil pour wall left
         // en gros il se cogne
-        
+        if ((_isWallRight && velocity.x > 0) || (_isWallLeft && velocity.x < 0))
+        {
+            velocity.x = 0;
+        }
+
+
 
         _rigidbody2D.linearVelocity = velocity;
     }
@@ -96,7 +115,7 @@ public class PlayerCharacter : MonoBehaviour
         {
             _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, -_snapToGround);
         }
-        
+
 
         if (_rigidbody2D.linearVelocity.y < 0)
         {
@@ -115,15 +134,15 @@ public class PlayerCharacter : MonoBehaviour
     {
         // Handle movement logic here
         _moveInput = moveInput;
-        
+
     }
 
     void Jump()
     {
-        
+
         _isJumping = true;
         _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, _jumpVelocity);
-        
+
     }
 
     public bool TryJump()
@@ -144,6 +163,18 @@ public class PlayerCharacter : MonoBehaviour
         Vector2 position = (Vector2)transform.position + _groundCheckOffset;
         return Physics2D.OverlapCircle(position, _groundCheckRadius, _groundLayer);
     }
+
+    bool CheckWall(Vector2 direction)
+    {
+        for (int i = -1; i <= 1; i++)
+        {
+            Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
+            if (Physics2D.Raycast(origin, direction, _wallCheckDistance, _obstacleLayer))
+                return true;
+        }
+        return false;
+    }
+
 
 
 
@@ -179,7 +210,7 @@ public class PlayerCharacter : MonoBehaviour
         if (ability != null)
         {
             // Execute the ability logic here
-            ability.ExecuteAbility(this); 
+            ability.ExecuteAbility(this);
         }
     }
 
@@ -213,5 +244,13 @@ public class PlayerCharacter : MonoBehaviour
         Gizmos.color = Color.red;
         Vector2 position = (Vector2)transform.position + _groundCheckOffset;
         Gizmos.DrawWireSphere(position, _groundCheckRadius);
+
+        Gizmos.color = Color.blue;
+        for (int i = -1; i <= 1; i++)
+        {
+            Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
+            Gizmos.DrawLine(origin, origin + Vector2.right * _wallCheckDistance);
+            Gizmos.DrawLine(origin, origin + Vector2.left * _wallCheckDistance);
+        }
     }
 }
