@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: FelineAgility
   m_EditorClassIdentifier: Assembly-CSharp::FelineAgilitySO
   _abilityKeys: 010000000000000000000000
-  _jumpMultiplier: 1.3
+  _jumpMultiplier: 1.6
   _duration: 5
