@@ -9,16 +9,20 @@ public class Interactable : MonoBehaviour
     [SerializeField] bool _multipleInteraction = false;
     bool _hasCompletedInteraction = false;
     bool _isInteracted = false;
-    PlayerCharacter _interactingCharacter; 
+    protected PlayerCharacter m_interactingCharacter; 
 
     [Header("Visual Settings")]
     [SerializeField] SpriteRenderer _visual;
     Sprite _defaultSprite;
     [SerializeField] Sprite _hoverSprite;
 
+    public float InteractDuration => _interactDuration;
+    public float CurrentInteractDuration => _currentInteractDuraction;
+
     void Start()
     {
         _defaultSprite = _visual.sprite;
+        _collider.isTrigger = true;
     }
 
     void Update()
@@ -40,7 +44,7 @@ public class Interactable : MonoBehaviour
     {
         _isInteracted = true;
         _currentInteractDuraction = 0f;
-        _interactingCharacter = character;
+        m_interactingCharacter = character;
     }
 
     public virtual void HandleInteraction(PlayerCharacter character)
@@ -51,7 +55,8 @@ public class Interactable : MonoBehaviour
     public void StopInteract()
     {
         _isInteracted = false;
-        _interactingCharacter = null;
+        m_interactingCharacter = null;
+        _currentInteractDuraction = 0f;
     }
 
     protected virtual void CompleteInteract()

@@ -59,8 +59,13 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] float _interactionRange = 1f;
     [SerializeField] LayerMask _interactableLayer;
     bool _interact = false;
+    float _interactionTime = 0f;
     Interactable _hoverInteractable;
     Interactable _currentInteractable;
+    [Space]
+    [SerializeField] GameObject _interactionVFX;
+    [SerializeField] SpriteRenderer _interactionVFXRenderer;
+    MaterialPropertyBlock _interactionVFXMaterialPropertyBlock;
 
 
     [Header("Ability Settings")]
@@ -80,6 +85,10 @@ public class PlayerCharacter : MonoBehaviour
     float _gripTimer;
     float _wallJumpLockTimer;
 
+    void Awake()
+    {
+        _interactionVFXMaterialPropertyBlock = new MaterialPropertyBlock();
+    }
 
     void Start()
     {
@@ -164,6 +173,8 @@ public class PlayerCharacter : MonoBehaviour
         // Movement locked while gripping. !!! NOT SURE TODO !!! (check later)
         if (_wallJumpLockTimer > 0) return;
 
+        if(_isEnchanting)
+            return;
 
 
         Vector2 velocity = _rigidbody2D.linearVelocity;
@@ -385,12 +396,30 @@ public class PlayerCharacter : MonoBehaviour
             return;
 
         if(_hoverInteractable != null)
+        {
             _hoverInteractable.EndHover();
+            if(_currentInteractable == _hoverInteractable)
+                _currentInteractable = null;
+        }
 
         _hoverInteractable = hoverInteractable;
 
         if(_hoverInteractable != null)
+        {
             _hoverInteractable.StartHover();
+            
+            _interactionVFX.SetActive(true);
+
+            if(_hoverInteractable.InteractDuration > 0f)
+                UpdateInteractionVFX(0f);
+            else    
+                UpdateInteractionVFX(1f);
+        }
+        else
+        {
+            _interactionVFX.SetActive(false);
+            UpdateInteractionVFX(1f);
+        }
     }
 
     public void Interact(bool interact)
@@ -403,6 +432,7 @@ public class PlayerCharacter : MonoBehaviour
             {
                 _currentInteractable = _hoverInteractable;
                 _currentInteractable.StartInteract(this);
+                _interactionTime = 0f;
             }
         }
         else
@@ -412,6 +442,8 @@ public class PlayerCharacter : MonoBehaviour
             {
                 _currentInteractable.StopInteract();
                 _currentInteractable = null;
+                _hoverInteractable = null;
+                _interactionTime = 0f;
             }
         }
     }
@@ -420,7 +452,16 @@ public class PlayerCharacter : MonoBehaviour
     {
         if(!_interact || _currentInteractable == null)
             return;
+        UpdateInteractionVFX(_currentInteractable.CurrentInteractDuration / _currentInteractable.InteractDuration);
         _currentInteractable.HandleInteraction(this);
+    }
+
+    void UpdateInteractionVFX(float fill)
+    {
+        fill = Mathf.Clamp01(fill);
+        _interactionVFXRenderer.SetPropertyBlock(_interactionVFXMaterialPropertyBlock);
+        _interactionVFXMaterialPropertyBlock.SetFloat("_Fill", fill);
+        _interactionVFXRenderer.SetPropertyBlock(_interactionVFXMaterialPropertyBlock);
     }
 
     #endregion Interaction

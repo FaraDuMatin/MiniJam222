@@ -15,6 +15,8 @@ public class PlayerController : MonoBehaviour
     InputAction _key2Action;
     InputAction _key3Action;
 
+    InputAction _interactAction;
+
 
     private void Awake()
     {
@@ -24,6 +26,7 @@ public class PlayerController : MonoBehaviour
         _key1Action = _playerInput.actions["Key1"];
         _key2Action = _playerInput.actions["Key2"];
         _key3Action = _playerInput.actions["Key3"];
+        _interactAction = _playerInput.actions["Interact"];
     }
 
     void Update()
@@ -60,6 +63,15 @@ public class PlayerController : MonoBehaviour
         if (_key3Action.WasPressedThisFrame())
         {
             _playerCharacter.AddAbilityKey(AbilityKey.Key3);
+        }
+        
+        if (_interactAction.WasPressedThisFrame())
+        {
+            _playerCharacter.Interact(true);
+        }
+        else if (_interactAction.WasReleasedThisFrame())
+        {
+            _playerCharacter.Interact(false);
         }
     }
 
