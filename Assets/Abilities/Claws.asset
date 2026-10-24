@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Claws
   m_EditorClassIdentifier: Assembly-CSharp::ClawsSO
   _abilityKeys: 020000000200000002000000
-  _duration: 2
+  _duration: 20

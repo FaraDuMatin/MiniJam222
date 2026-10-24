@@ -9,6 +9,7 @@ public class PlayerCharacter : MonoBehaviour
 
 
     [SerializeField] Rigidbody2D _rigidbody2D;
+    [SerializeField] AnimatorController _animatorController;
     [SerializeField] SpriteRenderer _spriteRenderer;
 
     [SerializeField] float _moveSpeed = 10f;
@@ -53,6 +54,14 @@ public class PlayerCharacter : MonoBehaviour
     bool _isWallRight;
     bool _isWallLeft;
 
+    [Header("Interaction Settings")]
+    [SerializeField] Vector2 _interactionOffset = new Vector2(0f, 0f);
+    [SerializeField] float _interactionRange = 1f;
+    [SerializeField] LayerMask _interactableLayer;
+    bool _interact = false;
+    Interactable _hoverInteractable;
+    Interactable _currentInteractable;
+
 
     [Header("Ability Settings")]
     [SerializeField] private List<AbilitySO> _abilities = new List<AbilitySO>();
@@ -85,6 +94,9 @@ public class PlayerCharacter : MonoBehaviour
 
     void Update()
     {
+        HandleHoverInteractable();
+        HandleInteraction();
+
         // Feline Agility Timer
         if (_jumpBoostTimer > 0)
         {
@@ -108,13 +120,16 @@ public class PlayerCharacter : MonoBehaviour
         if (_wallJumpLockTimer > 0)
             _wallJumpLockTimer -= Time.deltaTime;
 
-        _isGripping = _canGrip && !_isGrounded && _rigidbody2D.linearVelocity.y <= 0
-            && ((_isWallRight && _moveInput.x > 0) || (_isWallLeft && _moveInput.x < 0));
-
+        bool lastGripping = _isGripping;
+        _isGripping = _canGrip && !_isGrounded && _rigidbody2D.linearVelocity.y <= 0 && ((_isWallRight && _moveInput.x > 0) || (_isWallLeft && _moveInput.x < 0));
+        if(_isGripping != lastGripping && _isGripping)
+            _animatorController.GrabWall(_isWallRight ? -1 : 1);
 
         // Base Behavior Checks
         bool lastGroundedState = _isGrounded;
         _isGrounded = CheckGrounded();
+
+        _animatorController.Grounded(_isGrounded);
 
         _isWallRight = CheckWall(Vector2.right);
         _isWallLeft = CheckWall(Vector2.left);
@@ -150,6 +165,7 @@ public class PlayerCharacter : MonoBehaviour
         if (_wallJumpLockTimer > 0) return;
 
 
+
         Vector2 velocity = _rigidbody2D.linearVelocity;
         velocity.x = _moveInput.x * _moveSpeed;
         // if _isWallRight && _moveInput.x > 0, then velocity.x = 0
@@ -160,9 +176,9 @@ public class PlayerCharacter : MonoBehaviour
             velocity.x = 0;
         }
 
-
-
         _rigidbody2D.linearVelocity = velocity;
+
+        _animatorController.Move(velocity.x);
     }
     void HandleGravity()
     {
@@ -170,7 +186,7 @@ public class PlayerCharacter : MonoBehaviour
         // Claws Grip Logic
         if (_isGripping)
         {
-            _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, -_wallSlideSpeed);
+            _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, 0f);
             return;
         }
 
@@ -206,6 +222,7 @@ public class PlayerCharacter : MonoBehaviour
 
         _isJumping = true;
         _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, _jumpVelocity * _jumpBoostMultiplier);
+        _animatorController.Jumped();
 
 
     }
@@ -217,6 +234,7 @@ public class PlayerCharacter : MonoBehaviour
         _isGripping = false;
         _wallJumpLockTimer = _wallJumpLockTime;
         _rigidbody2D.linearVelocity = new Vector2(direction * _wallJumpVelocity.x, _wallJumpVelocity.y);
+        _animatorController.Jumped();
     }
 
 
@@ -325,7 +343,87 @@ public class PlayerCharacter : MonoBehaviour
     #endregion Ability System
 
 
+    #region Interaction
 
+    List<Interactable> SearchInteractables()
+    {
+        Vector2 worldCenter = (Vector2)transform.position + _interactionOffset;
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(worldCenter, _interactionRange, _interactableLayer);
+        List<Interactable> interactables = new List<Interactable>();
+        foreach (var collider in colliders)
+        {
+            Interactable interactable = collider.GetComponent<Interactable>();
+            if (interactable != null)
+                interactables.Add(interactable);
+        }
+        return interactables;
+    }
+
+    Interactable GetClosestInteractable()
+    {
+        List<Interactable> interactables = SearchInteractables();
+        Interactable closest = null;
+        float closestDistance = float.MaxValue;
+        Vector2 worldCenter = (Vector2)transform.position + _interactionOffset;
+        foreach (var interactable in interactables)
+        {
+            float distance = Vector2.Distance(worldCenter, interactable.transform.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = interactable;
+            }
+        }
+        return closest;
+    }
+
+    void HandleHoverInteractable()
+    {
+        Interactable hoverInteractable = GetClosestInteractable();
+
+        if(hoverInteractable == _hoverInteractable)
+            return;
+
+        if(_hoverInteractable != null)
+            _hoverInteractable.EndHover();
+
+        _hoverInteractable = hoverInteractable;
+
+        if(_hoverInteractable != null)
+            _hoverInteractable.StartHover();
+    }
+
+    public void Interact(bool interact)
+    {
+        _interact = interact;
+        if(interact)
+        {
+            // Press for interaction
+            if(_hoverInteractable != null)
+            {
+                _currentInteractable = _hoverInteractable;
+                _currentInteractable.StartInteract(this);
+            }
+        }
+        else
+        {
+            // Release interaction
+            if(_currentInteractable != null)
+            {
+                _currentInteractable.StopInteract();
+                _currentInteractable = null;
+            }
+        }
+    }
+
+    void HandleInteraction()
+    {
+        if(!_interact || _currentInteractable == null)
+            return;
+        _currentInteractable.HandleInteraction(this);
+    }
+
+    #endregion Interaction
 
 
     void UpdateColor()
@@ -352,5 +450,8 @@ public class PlayerCharacter : MonoBehaviour
             Gizmos.DrawLine(origin, origin + Vector2.right * _wallCheckDistance);
             Gizmos.DrawLine(origin, origin + Vector2.left * _wallCheckDistance);
         }
+
+        Vector2 hoverPosition = (Vector2)transform.position + _interactionOffset;
+        Gizmos.DrawWireSphere(hoverPosition, _interactionRange);
     }
 }
