@@ -9,7 +9,10 @@ public class PlayerCharacter : MonoBehaviour
 
 
     [SerializeField] Rigidbody2D _rigidbody2D;
+
+    [Header("VFX Settings")]
     [SerializeField] AnimatorController _animatorController;
+    [SerializeField] VFXEnchant _vfxEnchant;
     [SerializeField] SpriteRenderer _spriteRenderer;
 
     [SerializeField] float _moveSpeed = 10f;
@@ -50,6 +53,7 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] float _wallCheckDistance = 0.6f;
     [SerializeField] float _wallCheckSpacing = 0.4f;
     [SerializeField] LayerMask _obstacleLayer;
+    [SerializeField] int _raysPerSide = 3;
 
     bool _isWallRight;
     bool _isWallLeft;
@@ -84,6 +88,12 @@ public class PlayerCharacter : MonoBehaviour
     bool _isGripping;
     float _gripTimer;
     float _wallJumpLockTimer;
+
+    [Header("Cat Transformation Settings")]
+    [SerializeField] SpriteRenderer _characterSpriteRenderer;
+    [SerializeField] Collider2D _characterCollider;
+    [SerializeField] SpriteRenderer _catSpriteRenderer;
+    [SerializeField] Collider2D _catCollider;
 
     void Awake()
     {
@@ -150,12 +160,14 @@ public class PlayerCharacter : MonoBehaviour
             if (_rigidbody2D.linearVelocity.y <= 0)
             {
                 _isJumping = false;
+                _animatorController.IsJumping(_isJumping);
             }
         }
 
         if (_isJumping && _isGrounded && !lastGroundedState)
         {
             _isJumping = false;
+            _animatorController.IsJumping(_isJumping);
         }
 
         UpdateColor();
@@ -232,6 +244,7 @@ public class PlayerCharacter : MonoBehaviour
     {
 
         _isJumping = true;
+        _animatorController.IsJumping(_isJumping);
         _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, _jumpVelocity * _jumpBoostMultiplier);
         _animatorController.Jumped();
 
@@ -242,6 +255,7 @@ public class PlayerCharacter : MonoBehaviour
     {
         float direction = _isWallRight ? -1f : 1f;
         _isJumping = true;
+        _animatorController.IsJumping(_isJumping);
         _isGripping = false;
         _wallJumpLockTimer = _wallJumpLockTime;
         _rigidbody2D.linearVelocity = new Vector2(direction * _wallJumpVelocity.x, _wallJumpVelocity.y);
@@ -277,12 +291,22 @@ public class PlayerCharacter : MonoBehaviour
 
     bool CheckWall(Vector2 direction)
     {
-        for (int i = -1; i <= 1; i++)
+        float size = (_raysPerSide - 1) * _wallCheckSpacing;
+        Vector2 bottom = (Vector2)transform.position + _wallCheckOffset - Vector2.up * (size / 2);
+
+        for(int i = 0; i < _raysPerSide; i++)
         {
-            Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
+            Vector2 origin = bottom + Vector2.up * (i * _wallCheckSpacing);
             if (Physics2D.Raycast(origin, direction, _wallCheckDistance, _obstacleLayer))
                 return true;
         }
+
+        // for (int i = -1; i <= 1; i++)
+        // {
+        //     Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
+        //     if (Physics2D.Raycast(origin, direction, _wallCheckDistance, _obstacleLayer))
+        //         return true;
+        // }
         return false;
     }
 
@@ -315,6 +339,7 @@ public class PlayerCharacter : MonoBehaviour
         {
             // Execute the ability logic here
             ability.ExecuteAbility(this);
+            _vfxEnchant.PlayEnchantmentVFX(ability);
         }
     }
 
@@ -323,6 +348,7 @@ public class PlayerCharacter : MonoBehaviour
     {
         _isEnchanting = value;
         _currentAbilityKeys.Clear();
+        _vfxEnchant.VFXKeyList(_currentAbilityKeys);
     }
 
     public void AddAbilityKey(AbilityKey key)
@@ -330,11 +356,14 @@ public class PlayerCharacter : MonoBehaviour
         if (!_isEnchanting) return;
 
         _currentAbilityKeys.Add(key);
+        _vfxEnchant.VFXUseKey(key);
         if (_currentAbilityKeys.Count >= 3)
         {
             HandleAbilityInput(_currentAbilityKeys);
             _currentAbilityKeys.Clear();
+
         }
+        _vfxEnchant.VFXKeyList(_currentAbilityKeys);
     }
 
 
@@ -350,6 +379,13 @@ public class PlayerCharacter : MonoBehaviour
         _gripTimer = duration;
     }
 
+    public void TransformToCat(bool isCat)
+    {
+        _characterSpriteRenderer.enabled = !isCat;
+        _catSpriteRenderer.enabled = isCat;
+        _characterCollider.enabled = !isCat;
+        _catCollider.enabled = isCat;
+    }
 
     #endregion Ability System
 
@@ -484,15 +520,26 @@ public class PlayerCharacter : MonoBehaviour
         Vector2 position = (Vector2)transform.position + _groundCheckOffset;
         Gizmos.DrawWireSphere(position, _groundCheckRadius);
 
-        Gizmos.color = Color.blue;
-        for (int i = -1; i <= 1; i++)
-        {
-            Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
-            Gizmos.DrawLine(origin, origin + Vector2.right * _wallCheckDistance);
-            Gizmos.DrawLine(origin, origin + Vector2.left * _wallCheckDistance);
-        }
+        // Gizmos.color = Color.blue;
+        // for (int i = -1; i <= 1; i++)
+        // {
+        //     Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
+        //     Gizmos.DrawLine(origin, origin + Vector2.right * _wallCheckDistance);
+        //     Gizmos.DrawLine(origin, origin + Vector2.left * _wallCheckDistance);
+        // }
 
         Vector2 hoverPosition = (Vector2)transform.position + _interactionOffset;
         Gizmos.DrawWireSphere(hoverPosition, _interactionRange);
+
+        Gizmos.color = Color.purple;
+        float size = (_raysPerSide - 1) * _wallCheckSpacing;
+        Vector2 bottom = (Vector2)transform.position + _wallCheckOffset - Vector2.up * (size / 2);
+
+        for(int i = 0; i < _raysPerSide; i++)
+        {
+            Vector2 origin = bottom + Vector2.up * (i * _wallCheckSpacing);
+            Gizmos.DrawLine(origin, origin + Vector2.right * _wallCheckDistance);
+            Gizmos.DrawLine(origin, origin + Vector2.left * _wallCheckDistance);
+        }
     }
 }

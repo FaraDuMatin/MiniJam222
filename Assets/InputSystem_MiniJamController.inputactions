@@ -264,7 +264,7 @@
                     "path": "<Keyboard>/d",
                     "interactions": "",
                     "processors": "",
-                    "groups": ";Gamepad",
+                    "groups": "",
                     "action": "Key3",
                     "isComposite": false,
                     "isPartOfComposite": false
