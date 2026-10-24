@@ -1,5 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+
+
 public class PlayerCharacter : MonoBehaviour
 {
 
@@ -18,6 +21,10 @@ public class PlayerCharacter : MonoBehaviour
     float _jumpVelocity;
 
     bool _isJumping;
+
+    float _jumpBoostMultiplier = 1f;
+    float _jumpBoostTimer;
+
 
 
     [Header("Gravity Settings")]
@@ -64,6 +71,17 @@ public class PlayerCharacter : MonoBehaviour
 
     void Update()
     {
+        if (_jumpBoostTimer > 0)
+        {
+            _jumpBoostTimer -= Time.deltaTime;
+            if (_jumpBoostTimer <= 0)
+            {
+                _jumpBoostMultiplier = 1f;
+                // Debug.Log("Jump boost ended");
+            }
+        }
+
+
         bool lastGroundedState = _isGrounded;
         _isGrounded = CheckGrounded();
 
@@ -141,7 +159,8 @@ public class PlayerCharacter : MonoBehaviour
     {
 
         _isJumping = true;
-        _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, _jumpVelocity);
+        _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, _jumpVelocity * _jumpBoostMultiplier);
+
 
     }
 
@@ -185,17 +204,8 @@ public class PlayerCharacter : MonoBehaviour
     {
         foreach (var ability in _abilities)
         {
-            bool allKeysMatch = true;
-            foreach (var key in ability.AbilityKeys)
-            {
-                if (!abilityKeys.Contains(key))
-                {
-                    allKeysMatch = false;
-                    break;
-                }
-            }
-
-            if (allKeysMatch)
+            // Contains doesn't work because order matters, so we use SequenceEqual
+            if (ability.AbilityKeys.SequenceEqual(abilityKeys))  
             {
                 return ability;
             }
@@ -204,8 +214,10 @@ public class PlayerCharacter : MonoBehaviour
         return null; // No matching ability found
     }
 
+
     void HandleAbilityInput(List<AbilityKey> inputKeys)
     {
+        // Debug.Log("Sequence : " + string.Join(", ", inputKeys));
         AbilitySO ability = SearchAbility(inputKeys);
         if (ability != null)
         {
@@ -232,6 +244,15 @@ public class PlayerCharacter : MonoBehaviour
             _currentAbilityKeys.Clear();
         }
     }
+
+
+    public void ApplyJumpBoost(float multiplier, float duration)
+    {
+        _jumpBoostMultiplier = multiplier;
+        _jumpBoostTimer = duration;
+        // Debug.Log($"Jump boost applied: multiplier={multiplier}, duration={duration}");
+    }
+
 
     #endregion Ability System
 

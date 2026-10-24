@@ -586,7 +586,8 @@ MonoBehaviour:
   _obstacleLayer:
     serializedVersion: 2
     m_Bits: 128
-  _abilities: []
+  _abilities:
+  - {fileID: 11400000, guid: c912ad1032772824aafffc1af0722f63, type: 2}
 --- !u!4 &822450107
 Transform:
   m_ObjectHideFlags: 0
