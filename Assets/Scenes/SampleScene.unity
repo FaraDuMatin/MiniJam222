@@ -570,6 +570,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCharacter
   _rigidbody2D: {fileID: 822450105}
+  _spriteRenderer: {fileID: 1457360229}
   _moveSpeed: 3
   _jumpHeight: 2
   _timeToApex: 0.5
@@ -588,6 +589,10 @@ MonoBehaviour:
     m_Bits: 128
   _abilities:
   - {fileID: 11400000, guid: c912ad1032772824aafffc1af0722f63, type: 2}
+  - {fileID: 11400000, guid: 33ab35105b39bb44ea2bf62097b456ef, type: 2}
+  _wallSlideSpeed: 1
+  _wallJumpVelocity: {x: 8, y: 12}
+  _wallJumpLockTime: 0.2
 --- !u!4 &822450107
 Transform:
   m_ObjectHideFlags: 0

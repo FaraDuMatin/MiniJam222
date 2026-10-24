@@ -9,6 +9,8 @@ public class PlayerCharacter : MonoBehaviour
 
 
     [SerializeField] Rigidbody2D _rigidbody2D;
+    [SerializeField] SpriteRenderer _spriteRenderer;
+
     [SerializeField] float _moveSpeed = 10f;
     private Vector2 _moveInput;
 
@@ -58,6 +60,18 @@ public class PlayerCharacter : MonoBehaviour
     List<AbilityKey> _currentAbilityKeys = new List<AbilityKey>();
 
 
+
+    [Header("Claws Settings")]
+    [SerializeField] float _wallSlideSpeed = 1f;
+    [SerializeField] Vector2 _wallJumpVelocity = new Vector2(8f, 12f);
+    [SerializeField] float _wallJumpLockTime = 0.2f;
+
+    bool _canGrip;
+    bool _isGripping;
+    float _gripTimer;
+    float _wallJumpLockTimer;
+
+
     void Start()
     {
         _rigidbody2D.gravityScale = 0f; // Disable default gravity
@@ -71,17 +85,34 @@ public class PlayerCharacter : MonoBehaviour
 
     void Update()
     {
+        // Feline Agility Timer
         if (_jumpBoostTimer > 0)
         {
             _jumpBoostTimer -= Time.deltaTime;
             if (_jumpBoostTimer <= 0)
             {
                 _jumpBoostMultiplier = 1f;
-                // Debug.Log("Jump boost ended");
             }
         }
 
+        // Claws Timer
+        if (_gripTimer > 0)
+        {
+            _gripTimer -= Time.deltaTime;
+            if (_gripTimer <= 0)
+            {
+                _canGrip = false;
+            }
+        }
 
+        if (_wallJumpLockTimer > 0)
+            _wallJumpLockTimer -= Time.deltaTime;
+
+        _isGripping = _canGrip && !_isGrounded && _rigidbody2D.linearVelocity.y <= 0
+            && ((_isWallRight && _moveInput.x > 0) || (_isWallLeft && _moveInput.x < 0));
+
+
+        // Base Behavior Checks
         bool lastGroundedState = _isGrounded;
         _isGrounded = CheckGrounded();
 
@@ -102,6 +133,8 @@ public class PlayerCharacter : MonoBehaviour
         {
             _isJumping = false;
         }
+
+        UpdateColor();
     }
 
     void FixedUpdate()
@@ -113,6 +146,10 @@ public class PlayerCharacter : MonoBehaviour
 
     void HandleMovement()
     {
+        // Movement locked while gripping. !!! NOT SURE TODO !!! (check later)
+        if (_wallJumpLockTimer > 0) return;
+
+
         Vector2 velocity = _rigidbody2D.linearVelocity;
         velocity.x = _moveInput.x * _moveSpeed;
         // if _isWallRight && _moveInput.x > 0, then velocity.x = 0
@@ -129,6 +166,15 @@ public class PlayerCharacter : MonoBehaviour
     }
     void HandleGravity()
     {
+
+        // Claws Grip Logic
+        if (_isGripping)
+        {
+            _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, -_wallSlideSpeed);
+            return;
+        }
+
+
         if (_isGrounded && !_isJumping)
         {
             _rigidbody2D.linearVelocity = new Vector2(_rigidbody2D.linearVelocity.x, -_snapToGround);
@@ -164,8 +210,25 @@ public class PlayerCharacter : MonoBehaviour
 
     }
 
+    void WallJump()
+    {
+        float direction = _isWallRight ? -1f : 1f;
+        _isJumping = true;
+        _isGripping = false;
+        _wallJumpLockTimer = _wallJumpLockTime;
+        _rigidbody2D.linearVelocity = new Vector2(direction * _wallJumpVelocity.x, _wallJumpVelocity.y);
+    }
+
+
     public bool TryJump()
     {
+        if (_canGrip && !_isGrounded && (_isWallRight || _isWallLeft))
+        {
+            WallJump();
+            return true;
+        }
+
+
         if (_isGrounded && !_isJumping)
         {
             Jump();
@@ -205,7 +268,7 @@ public class PlayerCharacter : MonoBehaviour
         foreach (var ability in _abilities)
         {
             // Contains doesn't work because order matters, so we use SequenceEqual
-            if (ability.AbilityKeys.SequenceEqual(abilityKeys))  
+            if (ability.AbilityKeys.SequenceEqual(abilityKeys))
             {
                 return ability;
             }
@@ -217,7 +280,7 @@ public class PlayerCharacter : MonoBehaviour
 
     void HandleAbilityInput(List<AbilityKey> inputKeys)
     {
-        // Debug.Log("Sequence : " + string.Join(", ", inputKeys));
+        Debug.Log("Sequence : " + string.Join(", ", inputKeys));
         AbilitySO ability = SearchAbility(inputKeys);
         if (ability != null)
         {
@@ -250,7 +313,12 @@ public class PlayerCharacter : MonoBehaviour
     {
         _jumpBoostMultiplier = multiplier;
         _jumpBoostTimer = duration;
-        // Debug.Log($"Jump boost applied: multiplier={multiplier}, duration={duration}");
+    }
+
+    public void ApplyClaws(float duration)
+    {
+        _canGrip = true;
+        _gripTimer = duration;
     }
 
 
@@ -258,6 +326,17 @@ public class PlayerCharacter : MonoBehaviour
 
 
 
+
+
+    void UpdateColor()
+    {
+        if (_canGrip)
+            _spriteRenderer.color = Color.red;
+        else if (_jumpBoostTimer > 0)
+            _spriteRenderer.color = Color.yellow;
+        else
+            _spriteRenderer.color = Color.white;
+    }
 
 
     void OnDrawGizmosSelected()
