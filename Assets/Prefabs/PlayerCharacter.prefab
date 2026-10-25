@@ -1541,6 +1541,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 192
   _raysPerSide: 10
+  _catWallCheckOffset: {x: 0, y: 0.3}
+  _catRaysPerSide: 3
   _interactionOffset: {x: 0, y: 0.6}
   _interactionRange: 0.5
   _interactableLayer:
@@ -1551,6 +1553,7 @@ MonoBehaviour:
   _abilities:
   - {fileID: 11400000, guid: c912ad1032772824aafffc1af0722f63, type: 2}
   - {fileID: 11400000, guid: 33ab35105b39bb44ea2bf62097b456ef, type: 2}
+  - {fileID: 11400000, guid: f4e0a4b606bb3704f86925b6b5df6bd6, type: 2}
   _wallSlideSpeed: 1
   _wallJumpVelocity: {x: 8, y: 12}
   _wallJumpLockTime: 0.2
@@ -1558,6 +1561,7 @@ MonoBehaviour:
   _characterCollider: {fileID: 3886267208668593541}
   _catSpriteRenderer: {fileID: 7144717840848661442}
   _catCollider: {fileID: 2547155688933149434}
+  _catAbilitySO: {fileID: 11400000, guid: f4e0a4b606bb3704f86925b6b5df6bd6, type: 2}
 --- !u!50 &3896664300308580822
 Rigidbody2D:
   serializedVersion: 5
