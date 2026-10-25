@@ -16,10 +16,13 @@ public class Interactable : MonoBehaviour
     Sprite _defaultSprite;
     [SerializeField] Sprite _hoverSprite;
 
+    [Header("Sound Effects")]
+    [SerializeField] SoundSO _interactionSound;
+
     public float InteractDuration => _interactDuration;
     public float CurrentInteractDuration => _currentInteractDuraction;
 
-    void Start()
+    protected virtual void Start()
     {
         _defaultSprite = _visual.sprite;
         _collider.isTrigger = true;
@@ -36,6 +39,9 @@ public class Interactable : MonoBehaviour
             if(!_multipleInteraction && _hasCompletedInteraction)
                 return;
             _hasCompletedInteraction = true;
+
+            SoundObject sound = SoundManager.Instance.CreateSound(_interactionSound);
+            sound.transform.position = this.transform.position;
             CompleteInteract();
         }
     }
