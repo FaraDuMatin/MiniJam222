@@ -23,6 +23,12 @@ public class VFXEnchant : MonoBehaviour
     [Header("Enchantment VFX")]
     [SerializeField] Animator _enchantmentAnimator;
 
+    
+    [Header("SFX Settings")]
+    [SerializeField] SoundSO _abilityKey1Sound;
+    [SerializeField] SoundSO _abilityKey2Sound;
+    [SerializeField] SoundSO _abilityKey3Sound;
+
     void Awake()
     {
         Color color = _largeRenderer.color;
@@ -78,6 +84,21 @@ public class VFXEnchant : MonoBehaviour
         if (_useKeyCoroutine != null)
             StopCoroutine(_useKeyCoroutine);
         _useKeyCoroutine = StartCoroutine(Coroutine_UseKey());
+
+        SoundObject soundObject = null;
+        switch (key)
+        {
+            case AbilityKey.Key1:
+                soundObject = _abilityKey1Sound.Play();
+                break;
+            case AbilityKey.Key2:
+                soundObject = _abilityKey2Sound.Play();
+                break;
+            case AbilityKey.Key3:
+                soundObject = _abilityKey3Sound.Play();
+                break;
+        }
+        soundObject.transform.position = transform.position;
     }
 
     public void VFXKeyList(List<AbilityKey> keys)

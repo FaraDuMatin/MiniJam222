@@ -10,10 +10,12 @@ public class NPCStateMachine
     NPCIdleState _idleState;
     NPCPatrolState _patrolState;
     NPCFollowPlayer _followPlayerState;
+    NPCIntriguedState _intriguedState;
 
     public NPCIdleState IdleState => _idleState;
     public NPCPatrolState PatrolState => _patrolState;
     public NPCFollowPlayer FollowPlayerState => _followPlayerState;
+    public NPCIntriguedState IntriguedState => _intriguedState;
 
     public NPCStateMachine(NPCController controller)
     {
@@ -21,6 +23,7 @@ public class NPCStateMachine
         _idleState = new NPCIdleState(_controller, this);
         _patrolState = new NPCPatrolState(_controller, this);
         _followPlayerState = new NPCFollowPlayer(_controller, this);
+        _intriguedState = new NPCIntriguedState(_controller, this);
 
         ChangeState(_idleState);
     }
@@ -38,8 +41,8 @@ public class NPCStateMachine
 
     public void Update(float deltaTime)
     {
-        if(_currentState != _followPlayerState && _controller.SeePlayer())
-            ChangeState(_followPlayerState);
+        if(_currentState != _followPlayerState && _currentState != _intriguedState && _controller.SeePlayer())
+            ChangeState(_intriguedState);
 
         if(_currentState != null)
             _currentState.Update(deltaTime);
@@ -71,6 +74,7 @@ public class NPCIdleState : NPCState
     {
         _idleTimer = 0f;
         m_controller.Animator.SetBool("Running", false);
+        m_controller.HideMark();
     }
     public override void Update(float deltaTime)
     {
@@ -102,6 +106,8 @@ public class NPCPatrolState : NPCState
 
     public override void Enter()
     {
+        m_controller.HideMark();
+
         if(!m_controller.HasPatrolBehaviour || m_controller.StartPathPoint == null || m_controller.EndPatrolPathPoint == null)
         {
             m_stateMachine.ChangeState(m_stateMachine.IdleState);
@@ -177,6 +183,9 @@ public class NPCFollowPlayer : NPCState
     {
         m_controller.Animator.SetBool("Running", true);
         Replan();
+
+        m_controller.UpdateIntriguedFill(1f);
+        m_controller.ExclamationMark();
     }
 
     public override void Update(float deltaTime)
@@ -184,6 +193,13 @@ public class NPCFollowPlayer : NPCState
         if(!m_controller.SeePlayer())
         {
             m_stateMachine.ChangeState(m_stateMachine.IdleState);
+            return;
+        }
+
+        if(m_controller.ReachedPlayer())
+        {
+            Vector2 directionToPlayer = ((Vector3)m_controller.PlayerPosition - m_controller.transform.position).normalized;
+            m_controller.Face(directionToPlayer);
             return;
         }
 
@@ -207,6 +223,7 @@ public class NPCFollowPlayer : NPCState
         m_controller.Animator.SetBool("Running", false);
         _pathToPlayer.Clear();
         _currentIndex = 0;
+        m_controller.HideMark();
     }
 
     Vector3 CurrentTargetPosition()
@@ -228,5 +245,47 @@ public class NPCFollowPlayer : NPCState
             m_controller.PlayerPosition,
             out _approachPoint) ?? new List<INPCPathPoint>();
         _currentIndex = 0;
+    }
+}
+
+public class NPCIntriguedState : NPCState
+{
+    float _timer;
+
+    public NPCIntriguedState(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) {}
+
+    public override void Enter()
+    {
+        _timer = 0f;
+        m_controller.Animator.SetBool("Running", false);
+
+        m_controller.UpdateIntriguedFill(0f);
+        m_controller.QuestionMark();
+    }
+
+    public override void Update(float deltaTime)
+    {
+        if(!m_controller.SeePlayer())
+        {
+            m_stateMachine.ChangeState(m_stateMachine.IdleState);
+            return;
+        }
+
+        Vector2 direction = ((Vector3)m_controller.PlayerPosition - m_controller.transform.position).normalized;
+        m_controller.Face(direction);
+
+        float rate = m_controller.PlayerIsCat ? m_controller.CatDetectionMultiplier : 1f;
+        _timer += deltaTime * rate;
+
+        m_controller.UpdateIntriguedFill(_timer / m_controller.DetectionTime);
+
+        if(_timer >= m_controller.DetectionTime)
+            m_stateMachine.ChangeState(m_stateMachine.FollowPlayerState);
+    }
+
+    public override void Exit()
+    {
+        _timer = 0f;
+        m_controller.HideMark();
     }
 }

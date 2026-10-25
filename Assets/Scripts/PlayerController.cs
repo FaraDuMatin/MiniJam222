@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour
 
     InputAction _interactAction;
 
+    InputAction _escapeAction;
 
     private void Awake()
     {
@@ -27,10 +28,19 @@ public class PlayerController : MonoBehaviour
         _key2Action = _playerInput.actions["Key2"];
         _key3Action = _playerInput.actions["Key3"];
         _interactAction = _playerInput.actions["Interact"];
+        _escapeAction = _playerInput.actions["Escape"];
     }
 
     void Update()
     {
+        if (_escapeAction.WasPressedThisFrame())
+        {
+            SettingsManager.Instance.ShowSettings(!SettingsManager.Instance.IsSettingsVisible);
+        }
+
+        if(SettingsManager.Instance.IsSettingsVisible)
+            return;
+
         Vector2 moveInput = _moveAction.ReadValue<Vector2>();
         _playerCharacter.MoveInput(moveInput);
 

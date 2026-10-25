@@ -13,9 +13,21 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 7034419693196193459}
     - target: {fileID: 273699984085157863, guid: 57f5182a80f598d4c837545e25ae4ad0, type: 3}
+      propertyPath: _moneyValue
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 273699984085157863, guid: 57f5182a80f598d4c837545e25ae4ad0, type: 3}
       propertyPath: _hoverSprite
       value: 
       objectReference: {fileID: -1973775791, guid: a89a7242579324a4688ed37929feecf0, type: 3}
+    - target: {fileID: 273699984085157863, guid: 57f5182a80f598d4c837545e25ae4ad0, type: 3}
+      propertyPath: _interactDuration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 273699984085157863, guid: 57f5182a80f598d4c837545e25ae4ad0, type: 3}
+      propertyPath: _multipleInteraction
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 489045255408248609, guid: 57f5182a80f598d4c837545e25ae4ad0, type: 3}
       propertyPath: m_Name
       value: Item - Safe Variant

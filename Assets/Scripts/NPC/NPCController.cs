@@ -12,10 +12,22 @@ public class NPCController : MonoBehaviour
     [Header("View")]
     [SerializeField] NPCView _npcView;
     [SerializeField] float _reachedPlayerDistance = 0.25f;
+    [SerializeField] float _detectionTime = 1.5f;
+    [SerializeField] float _catDetectionMultiplier = 0.5f;
 
     [Header("VFX")]
     [SerializeField] SpriteRenderer _characterRenderer;
     [SerializeField] Animator _animator;
+    [SerializeField] SpriteRenderer _intriguedRenderer;
+    [SerializeField] SpriteRenderer _intriguedBackgroundRenderer;
+    [SerializeField] Sprite _questionMarkSprite;
+    [SerializeField] Color _questionColor;
+    [SerializeField] Color _questionBackgroundColor;
+
+    [SerializeField] Sprite _exclamationMarkSprite;
+    [SerializeField] Color _exclamationColor;
+    [SerializeField] Color _exclamationBackgroundColor;
+    MaterialPropertyBlock _vfxIntriguedMpb;
 
     public NPCPathPoint StartPathPoint => _startPathPoint;
     public NPCPathPoint EndPatrolPathPoint => _endPatrolPathPoint;
@@ -25,6 +37,9 @@ public class NPCController : MonoBehaviour
     public Animator Animator => _animator;
     public NPCView NPCView => _npcView;
     public float ReachedPlayerDistance => _reachedPlayerDistance;
+    public float DetectionTime => _detectionTime;
+    public float CatDetectionMultiplier => _catDetectionMultiplier;
+    public bool PlayerIsCat => _npcView.CharacterTarget != null && _npcView.CharacterTarget.IsInCat;
     
     NPCStateMachine _stateMachine;
 
@@ -35,6 +50,8 @@ public class NPCController : MonoBehaviour
         if(_startPathPoint != null)
             this.transform.position = _startPathPoint.GetPosition();
         _stateMachine = new NPCStateMachine(this);
+
+        _vfxIntriguedMpb = new MaterialPropertyBlock();
     }
 
     void Update()
@@ -56,12 +73,15 @@ public class NPCController : MonoBehaviour
     {
         Vector3 move = new Vector3(direction.x, direction.y, 0) * _moveSpeed * elapsedTime;
         this.transform.Translate(move, Space.World);
+        Face(direction);
+    }
 
-        if(direction.x != 0)
-        {
-            _characterRenderer.flipX = direction.x < 0;
-            _npcView.Flip(direction.x < 0);
-        }
+    public void Face(Vector2 direction)
+    {
+        if(direction.x == 0)
+            return;
+        _characterRenderer.flipX = direction.x < 0;
+        _npcView.Flip(direction.x < 0);
     }
 
     public bool SeePlayer()
@@ -69,5 +89,41 @@ public class NPCController : MonoBehaviour
         return _npcView.CharacterTarget != null && _npcView.CanSeeIt;
     }
 
+    public void UpdateIntriguedFill(float fillAmount)
+    {
+        _intriguedRenderer.sprite = _questionMarkSprite;
+        _vfxIntriguedMpb.SetFloat("_Fill", fillAmount);
+        _intriguedRenderer.SetPropertyBlock(_vfxIntriguedMpb);
+    }
+
+    public void HideMark()
+    {
+        _intriguedRenderer.sprite = null;
+        _intriguedBackgroundRenderer.sprite = null;
+    }
+
+    public void QuestionMark()
+    {
+        _intriguedRenderer.sprite = _questionMarkSprite;
+        _intriguedRenderer.color = _questionColor;
+        
+        _intriguedBackgroundRenderer.sprite = _questionMarkSprite;
+        _intriguedBackgroundRenderer.color = _questionBackgroundColor;
+    }
+
+    public void ExclamationMark()
+    {
+        _intriguedRenderer.sprite = _exclamationMarkSprite;
+        _intriguedRenderer.color = _exclamationColor;
+
+        _intriguedBackgroundRenderer.sprite = _exclamationMarkSprite;
+        _intriguedBackgroundRenderer.color = _exclamationBackgroundColor;
+    }
+
     public Vector3 PlayerPosition => _npcView.CharacterTarget.transform.position;
+
+    public bool ReachedPlayer()
+    {
+        return Vector3.Distance(this.transform.position, PlayerPosition) <= _reachedPlayerDistance;
+    }
 }

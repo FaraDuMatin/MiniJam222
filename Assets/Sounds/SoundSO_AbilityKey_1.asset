@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e8d470cb66b17145aa005e7f4d97504, type: 3}
+  m_Name: SoundSO_AbilityKey_1
+  m_EditorClassIdentifier: Assembly-CSharp::SoundSO
+  _audioClips:
+  - {fileID: 8300000, guid: 532049e2af2314646ba6bf334cb82c7e, type: 3}
+  _outputGroup: {fileID: 9150130316363889469, guid: b6ce3ab7deecd894fa7959d36e990cec, type: 2}
+  _isPlaylist: 0
+  _randomClipInPlaylist: 0
+  _playOnAwake: 1
+  _loop: 0
+  _oneshot: 1
+  _pitchRange: {x: 0.9, y: 1.1}
+  _spatialBlend: 0
+  _ignorePause: 0

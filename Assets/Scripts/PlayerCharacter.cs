@@ -5,16 +5,17 @@ using System.Linq;
 
 public class PlayerCharacter : MonoBehaviour
 {
-
-
-
     [SerializeField] Rigidbody2D _rigidbody2D;
 
     [Header("VFX Settings")]
     [SerializeField] AnimatorController _animatorController;
     [SerializeField] VFXEnchant _vfxEnchant;
     [SerializeField] SpriteRenderer _spriteRenderer;
+    [Space]
+    [SerializeField] ParticleSystem _jumpBoostVFX;
+    [SerializeField] ParticleSystem _grabWallVFX;
 
+    [Header("Movement Settings")]
     [SerializeField] float _moveSpeed = 10f;
     private Vector2 _moveInput;
 
@@ -130,6 +131,7 @@ public class PlayerCharacter : MonoBehaviour
             if (_jumpBoostTimer <= 0)
             {
                 _jumpBoostMultiplier = 1f;
+                _jumpBoostVFX.Stop();
             }
         }
 
@@ -140,6 +142,7 @@ public class PlayerCharacter : MonoBehaviour
             if (_gripTimer <= 0)
             {
                 _canGrip = false;
+                _grabWallVFX.Stop();
             }
         }
 
@@ -342,6 +345,15 @@ public class PlayerCharacter : MonoBehaviour
         AbilitySO ability = SearchAbility(inputKeys);
         if (ability != null)
         {
+            // Reset timers of abilities
+            _jumpBoostMultiplier = 1f;
+            _jumpBoostTimer = 0f;
+            _canGrip = false;
+            _gripTimer = 0f;
+
+            _jumpBoostVFX.Stop();
+            _grabWallVFX.Stop();
+
             // Execute the ability logic here
             ability.ExecuteAbility(this);
             _vfxEnchant.PlayEnchantmentVFX(ability);
@@ -397,12 +409,16 @@ public class PlayerCharacter : MonoBehaviour
     {
         _jumpBoostMultiplier = multiplier;
         _jumpBoostTimer = duration;
+
+        _jumpBoostVFX.Play();
     }
 
     public void ApplyClaws(float duration)
     {
         _canGrip = true;
         _gripTimer = duration;
+
+        _grabWallVFX.Play();
     }
 
     public void TransformToCat(bool isCat)
@@ -412,6 +428,18 @@ public class PlayerCharacter : MonoBehaviour
         _catSpriteRenderer.enabled = isCat;
         _characterCollider.enabled = !isCat;
         _catCollider.enabled = isCat;
+
+        if(isCat)
+        {
+            // Reset timers of abilities
+            _jumpBoostMultiplier = 1f;
+            _jumpBoostTimer = 0f;
+            _canGrip = false;
+            _gripTimer = 0f;
+
+            _jumpBoostVFX.Stop();
+            _grabWallVFX.Stop();
+        }
     }
 
     bool CanTransformBack()
@@ -462,6 +490,9 @@ public class PlayerCharacter : MonoBehaviour
     void HandleHoverInteractable()
     {
         Interactable hoverInteractable = GetClosestInteractable();
+
+        if(_isInCat)
+            hoverInteractable = null;
 
         if (hoverInteractable == _hoverInteractable)
             return;
