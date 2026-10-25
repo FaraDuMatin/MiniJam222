@@ -9,15 +9,18 @@ public class NPCStateMachine
 
     NPCIdleState _idleState;
     NPCPatrolState _patrolState;
+    NPCFollowPlayer _followPlayerState;
 
     public NPCIdleState IdleState => _idleState;
     public NPCPatrolState PatrolState => _patrolState;
+    public NPCFollowPlayer FollowPlayerState => _followPlayerState;
 
     public NPCStateMachine(NPCController controller)
     {
         _controller = controller;
         _idleState = new NPCIdleState(_controller, this);
         _patrolState = new NPCPatrolState(_controller, this);
+        _followPlayerState = new NPCFollowPlayer(_controller, this);
 
         ChangeState(_idleState);
     }
@@ -35,6 +38,9 @@ public class NPCStateMachine
 
     public void Update(float deltaTime)
     {
+        if(_currentState != _followPlayerState && _controller.SeePlayer())
+            ChangeState(_followPlayerState);
+
         if(_currentState != null)
             _currentState.Update(deltaTime);
     }
@@ -137,11 +143,6 @@ public class NPCPatrolState : NPCState
                 m_stateMachine.ChangeState(m_stateMachine.IdleState);
             }
         }
-
-        float vfxDir = direction.x;
-        if(vfxDir == 0)
-            return;
-        m_controller.CharacterRenderer.flipX = vfxDir < 0;
     }
 
     public override void Exit()
@@ -163,27 +164,69 @@ public class NPCPatrolState : NPCState
 
 public class NPCFollowPlayer : NPCState
 {
+    const float ReplanInterval = 0.5f;
+
+    List<INPCPathPoint> _pathToPlayer = new List<INPCPathPoint>();
+    int _currentIndex = 0;
+    Vector3 _approachPoint;
+    float _replanTimer = 0f;
+
     public NPCFollowPlayer(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) {}
 
     public override void Enter()
     {
         m_controller.Animator.SetBool("Running", true);
+        Replan();
     }
 
     public override void Update(float deltaTime)
     {
-        if(m_controller.SeePlayer())
-        {
-            // Move closer to the player by using the NPCPathPoints (NPCController has access to points from it's starting point)
-        }
-        else
+        if(!m_controller.SeePlayer())
         {
             m_stateMachine.ChangeState(m_stateMachine.IdleState);
+            return;
+        }
+
+        _replanTimer -= deltaTime;
+        if(_replanTimer <= 0f)
+            Replan();
+
+        Vector3 currentTarget = CurrentTargetPosition();
+        Vector2 direction = ((Vector3)currentTarget - m_controller.transform.position).normalized;
+        m_controller.Move(direction, deltaTime);
+
+        if(_currentIndex < _pathToPlayer.Count && m_controller.ReachedPoint(_pathToPlayer[_currentIndex]))
+        {
+            _pathToPlayer[_currentIndex].EnterPosition(m_controller.transform);
+            _currentIndex++;
         }
     }
 
     public override void Exit()
     {
         m_controller.Animator.SetBool("Running", false);
+        _pathToPlayer.Clear();
+        _currentIndex = 0;
+    }
+
+    Vector3 CurrentTargetPosition()
+    {
+        // On the final leg, steer straight at the real approach point instead of
+        // waiting to fully arrive at the last node first - otherwise the NPC can
+        // face away from the player while walking to that node and lose sight of them.
+        bool onFinalLeg = _currentIndex >= _pathToPlayer.Count - 1;
+        if(!onFinalLeg)
+            return _pathToPlayer[_currentIndex].GetPosition();
+        return _approachPoint;
+    }
+
+    void Replan()
+    {
+        _replanTimer = ReplanInterval;
+        _pathToPlayer = NPCPathManager.Instance.GetPathToClosestApproach(
+            m_controller.transform.position,
+            m_controller.PlayerPosition,
+            out _approachPoint) ?? new List<INPCPathPoint>();
+        _currentIndex = 0;
     }
 }

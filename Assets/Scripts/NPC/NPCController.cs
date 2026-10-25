@@ -11,6 +11,7 @@ public class NPCController : MonoBehaviour
 
     [Header("View")]
     [SerializeField] NPCView _npcView;
+    [SerializeField] float _reachedPlayerDistance = 0.25f;
 
     [Header("VFX")]
     [SerializeField] SpriteRenderer _characterRenderer;
@@ -23,7 +24,8 @@ public class NPCController : MonoBehaviour
     public SpriteRenderer CharacterRenderer => _characterRenderer;
     public Animator Animator => _animator;
     public NPCView NPCView => _npcView;
-
+    public float ReachedPlayerDistance => _reachedPlayerDistance;
+    
     NPCStateMachine _stateMachine;
 
     public bool HasPatrolBehaviour => _startPathPoint != null && _endPatrolPathPoint != null;
@@ -42,17 +44,30 @@ public class NPCController : MonoBehaviour
 
     public bool ReachedPoint(INPCPathPoint point)
     {
-        return Vector3.Distance(this.transform.position, point.GetPosition()) <= _patrolReachDistance;
+        return ReachedPosition(point.GetPosition());
+    }
+
+    public bool ReachedPosition(Vector3 position)
+    {
+        return Vector3.Distance(this.transform.position, position) <= _patrolReachDistance;
     }
 
     public void Move(Vector2 direction, float elapsedTime)
     {
         Vector3 move = new Vector3(direction.x, direction.y, 0) * _moveSpeed * elapsedTime;
         this.transform.Translate(move, Space.World);
+
+        if(direction.x != 0)
+        {
+            _characterRenderer.flipX = direction.x < 0;
+            _npcView.Flip(direction.x < 0);
+        }
     }
 
     public bool SeePlayer()
     {
-        return _npcView.CharacterTarget != null;
+        return _npcView.CharacterTarget != null && _npcView.CanSeeIt;
     }
+
+    public Vector3 PlayerPosition => _npcView.CharacterTarget.transform.position;
 }

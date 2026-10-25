@@ -121,6 +121,49 @@ public class NPCPathManager : MonoBehaviour
         return FindPath(start, target);
     }
 
+    public struct GraphApproach
+    {
+        public INPCPathPoint From;
+        public Vector3 Position;
+    }
+
+    public GraphApproach GetClosestPointOnGraph(Vector3 target)
+    {
+        GraphApproach best = default;
+        float bestDist = float.MaxValue;
+
+        foreach (var point in _pathPoints)
+        {
+            foreach (var neighbor in point.GetNeighbors())
+            {
+                Vector3 closest = ClosestPointOnSegment(point.GetPosition(), neighbor.GetPosition(), target);
+                float dist = Vector3.Distance(closest, target);
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = new GraphApproach { From = point, Position = closest };
+                }
+            }
+        }
+
+        return best;
+    }
+
+    static Vector3 ClosestPointOnSegment(Vector3 a, Vector3 b, Vector3 p)
+    {
+        Vector3 ab = b - a;
+        float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / Vector3.Dot(ab, ab));
+        return a + ab * t;
+    }
+
+    public List<INPCPathPoint> GetPathToClosestApproach(Vector3 npcPosition, Vector3 targetPosition, out Vector3 approachPoint)
+    {
+        INPCPathPoint start = GetClosestPathPoint(npcPosition);
+        GraphApproach approach = GetClosestPointOnGraph(targetPosition);
+        approachPoint = approach.Position;
+        return FindPath(start, approach.From);
+    }
+
 
     void OnDrawGizmos()
     {

@@ -100,6 +100,8 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] AbilitySO _catAbilitySO;
     bool _isInCat;
 
+    public bool IsInCat => _isInCat;
+
     void Awake()
     {
         _interactionVFXMaterialPropertyBlock = new MaterialPropertyBlock();

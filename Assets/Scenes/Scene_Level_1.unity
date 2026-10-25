@@ -3536,7 +3536,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: -1640648943, guid: 34480f85af6d37a4cbd9b68772c86338, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -4014,7 +4014,7 @@ SpriteRenderer:
   m_SortingOrder: 10
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: cc04142f9d8837b40bb19a8157761dd8, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 2
@@ -4265,7 +4265,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 8293103451368926462, guid: 34480f85af6d37a4cbd9b68772c86338, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -5253,54 +5253,6 @@ Transform:
   - {fileID: 6629720165070728687}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1810693995
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1810693997}
-  - component: {fileID: 1810693996}
-  m_Layer: 0
-  m_Name: NPC Path Point (2)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1810693996
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1810693995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a26daf038eece2744a3c9cf9c338f25e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NPCPathPoint
-  _pathNeighbors:
-  - {fileID: 1626424417}
-  - {fileID: 256994476}
-  _doorNeighbors: []
---- !u!4 &1810693997
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1810693995}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.71, y: 3.35, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1869329392
 GameObject:
   m_ObjectHideFlags: 0
@@ -5312,8 +5264,9 @@ GameObject:
   - component: {fileID: 1869329393}
   - component: {fileID: 1869329394}
   - component: {fileID: 1869329395}
+  - component: {fileID: 1869329396}
   m_Layer: 0
-  m_Name: Sprite_Square
+  m_Name: NPC View
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5444,6 +5397,23 @@ PolygonCollider2D:
       - {x: 0.029976368, y: 0.06603348}
       - {x: 1.9117777, y: -1.4985068}
   m_UseDelaunayMesh: 1
+--- !u!114 &1869329396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869329392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 305e5039596669545bb62e33cfb03156, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NPCView
+  _viewRenderer: {fileID: 1869329394}
+  _obstacleMask:
+    serializedVersion: 2
+    m_Bits: 192
+  _viewDistance: 2.5
 --- !u!1 &1876752318
 GameObject:
   m_ObjectHideFlags: 0
@@ -5540,12 +5510,12 @@ BoxCollider2D:
     border: {x: 1, y: 0.0625, z: 1, w: 0.75}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 3, y: 1}
-    newSize: {x: 20, y: 5}
+    newSize: {x: 50, y: 5}
     adaptiveTilingThreshold: 0.57
     drawMode: 2
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 20, y: 5}
+  m_Size: {x: 50, y: 5}
   m_EdgeRadius: 0
 --- !u!212 &1899357936
 SpriteRenderer:
@@ -5601,7 +5571,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 2
-  m_Size: {x: 20, y: 5}
+  m_Size: {x: 50, y: 5}
   m_AdaptiveModeThreshold: 0.57
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -5979,7 +5949,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 913334905, guid: 34480f85af6d37a4cbd9b68772c86338, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -6189,6 +6159,7 @@ MonoBehaviour:
   _endPatrolPathPoint: {fileID: 399166536}
   _patrolReachDistance: 0.25
   _idleTime: 2
+  _npcView: {fileID: 1869329396}
   _characterRenderer: {fileID: 722550463}
   _animator: {fileID: 1062873310}
 --- !u!1 &2128440170
@@ -6271,7 +6242,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2049548379, guid: 34480f85af6d37a4cbd9b68772c86338, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -6797,7 +6768,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 4642615077584389038, guid: 1f70953c80c1265459a169ef4241f3c4, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.42
+      value: -11.38
       objectReference: {fileID: 0}
     - target: {fileID: 4642615077584389038, guid: 1f70953c80c1265459a169ef4241f3c4, type: 3}
       propertyPath: m_LocalPosition.y
@@ -6875,6 +6846,5 @@ SceneRoots:
   - {fileID: 99034107}
   - {fileID: 1626424418}
   - {fileID: 256994477}
-  - {fileID: 1810693997}
   - {fileID: 399166537}
   - {fileID: 2112420804}
