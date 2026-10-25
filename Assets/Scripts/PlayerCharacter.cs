@@ -54,6 +54,9 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] float _wallCheckSpacing = 0.4f;
     [SerializeField] LayerMask _obstacleLayer;
     [SerializeField] int _raysPerSide = 3;
+    [SerializeField] Vector2 _catWallCheckOffset = new Vector2(0f, 0.3f);
+    [SerializeField] int _catRaysPerSide = 3;
+
 
     bool _isWallRight;
     bool _isWallLeft;
@@ -91,9 +94,11 @@ public class PlayerCharacter : MonoBehaviour
 
     [Header("Cat Transformation Settings")]
     [SerializeField] SpriteRenderer _characterSpriteRenderer;
-    [SerializeField] Collider2D _characterCollider;
+    [SerializeField] CapsuleCollider2D _characterCollider;
     [SerializeField] SpriteRenderer _catSpriteRenderer;
     [SerializeField] Collider2D _catCollider;
+    [SerializeField] AbilitySO _catAbilitySO;
+    bool _isInCat;
 
     void Awake()
     {
@@ -141,7 +146,7 @@ public class PlayerCharacter : MonoBehaviour
 
         bool lastGripping = _isGripping;
         _isGripping = _canGrip && !_isGrounded && _rigidbody2D.linearVelocity.y <= 0 && ((_isWallRight && _moveInput.x > 0) || (_isWallLeft && _moveInput.x < 0));
-        if(_isGripping != lastGripping && _isGripping)
+        if (_isGripping != lastGripping && _isGripping)
             _animatorController.GrabWall(_isWallRight ? -1 : 1);
 
         // Base Behavior Checks
@@ -185,7 +190,7 @@ public class PlayerCharacter : MonoBehaviour
         // Movement locked while gripping. !!! NOT SURE TODO !!! (check later)
         if (_wallJumpLockTimer > 0) return;
 
-        if(_isEnchanting)
+        if (_isEnchanting)
             return;
 
 
@@ -291,24 +296,22 @@ public class PlayerCharacter : MonoBehaviour
 
     bool CheckWall(Vector2 direction)
     {
-        float size = (_raysPerSide - 1) * _wallCheckSpacing;
-        Vector2 bottom = (Vector2)transform.position + _wallCheckOffset - Vector2.up * (size / 2);
+        // Cat is smaller so smaller rays
+        Vector2 offset = _isInCat ? _catWallCheckOffset : _wallCheckOffset;
+        int raysPerSide = _isInCat ? _catRaysPerSide : _raysPerSide;
 
-        for(int i = 0; i < _raysPerSide; i++)
+        float size = (raysPerSide - 1) * _wallCheckSpacing;
+        Vector2 bottom = (Vector2)transform.position + offset - Vector2.up * (size / 2);
+
+        for (int i = 0; i < raysPerSide; i++)
         {
             Vector2 origin = bottom + Vector2.up * (i * _wallCheckSpacing);
             if (Physics2D.Raycast(origin, direction, _wallCheckDistance, _obstacleLayer))
                 return true;
         }
-
-        // for (int i = -1; i <= 1; i++)
-        // {
-        //     Vector2 origin = (Vector2)transform.position + _wallCheckOffset + Vector2.up * (i * _wallCheckSpacing);
-        //     if (Physics2D.Raycast(origin, direction, _wallCheckDistance, _obstacleLayer))
-        //         return true;
-        // }
         return false;
     }
+
 
 
 
@@ -355,16 +358,37 @@ public class PlayerCharacter : MonoBehaviour
     {
         if (!_isEnchanting) return;
 
-        _currentAbilityKeys.Add(key);
-        _vfxEnchant.VFXUseKey(key);
-        if (_currentAbilityKeys.Count >= 3)
+        if (_isInCat)
         {
-            HandleAbilityInput(_currentAbilityKeys);
-            _currentAbilityKeys.Clear();
-
+            // Search next index
+            int nextIndex = _currentAbilityKeys.Count;
+            List<AbilityKey> catAbilityKeys = _catAbilitySO.AbilityKeys;
+            if (key != catAbilityKeys[nextIndex])
+                return;
+            _currentAbilityKeys.Add(key);
+            _vfxEnchant.VFXUseKey(key);
+            if (_currentAbilityKeys.Count >= catAbilityKeys.Count)
+            {
+                // Stay a cat if the character doesn't fit
+                if (CanTransformBack())
+                    TransformToCat(false);
+                _currentAbilityKeys.Clear();
+            }
+            _vfxEnchant.VFXKeyList(_currentAbilityKeys);
         }
-        _vfxEnchant.VFXKeyList(_currentAbilityKeys);
+        else
+        {
+            _currentAbilityKeys.Add(key);
+            _vfxEnchant.VFXUseKey(key);
+            if (_currentAbilityKeys.Count >= 3)
+            {
+                HandleAbilityInput(_currentAbilityKeys);
+                _currentAbilityKeys.Clear();
+            }
+            _vfxEnchant.VFXKeyList(_currentAbilityKeys);
+        }
     }
+
 
 
     public void ApplyJumpBoost(float multiplier, float duration)
@@ -381,11 +405,20 @@ public class PlayerCharacter : MonoBehaviour
 
     public void TransformToCat(bool isCat)
     {
+        _isInCat = isCat;
         _characterSpriteRenderer.enabled = !isCat;
         _catSpriteRenderer.enabled = isCat;
         _characterCollider.enabled = !isCat;
         _catCollider.enabled = isCat;
     }
+
+    bool CanTransformBack()
+    {
+        Vector2 point = _characterCollider.transform.TransformPoint(_characterCollider.offset);
+        Vector2 size = _characterCollider.size * 0.9f;
+        return Physics2D.OverlapCapsule(point, size, _characterCollider.direction, 0f, _groundLayer | _obstacleLayer) == null;
+    }
+
 
     #endregion Ability System
 
@@ -428,27 +461,27 @@ public class PlayerCharacter : MonoBehaviour
     {
         Interactable hoverInteractable = GetClosestInteractable();
 
-        if(hoverInteractable == _hoverInteractable)
+        if (hoverInteractable == _hoverInteractable)
             return;
 
-        if(_hoverInteractable != null)
+        if (_hoverInteractable != null)
         {
             _hoverInteractable.EndHover();
-            if(_currentInteractable == _hoverInteractable)
+            if (_currentInteractable == _hoverInteractable)
                 _currentInteractable = null;
         }
 
         _hoverInteractable = hoverInteractable;
 
-        if(_hoverInteractable != null)
+        if (_hoverInteractable != null)
         {
             _hoverInteractable.StartHover();
-            
+
             _interactionVFX.SetActive(true);
 
-            if(_hoverInteractable.InteractDuration > 0f)
+            if (_hoverInteractable.InteractDuration > 0f)
                 UpdateInteractionVFX(0f);
-            else    
+            else
                 UpdateInteractionVFX(1f);
         }
         else
@@ -461,10 +494,10 @@ public class PlayerCharacter : MonoBehaviour
     public void Interact(bool interact)
     {
         _interact = interact;
-        if(interact)
+        if (interact)
         {
             // Press for interaction
-            if(_hoverInteractable != null)
+            if (_hoverInteractable != null)
             {
                 _currentInteractable = _hoverInteractable;
                 _currentInteractable.StartInteract(this);
@@ -474,7 +507,7 @@ public class PlayerCharacter : MonoBehaviour
         else
         {
             // Release interaction
-            if(_currentInteractable != null)
+            if (_currentInteractable != null)
             {
                 _currentInteractable.StopInteract();
                 _currentInteractable = null;
@@ -486,7 +519,7 @@ public class PlayerCharacter : MonoBehaviour
 
     void HandleInteraction()
     {
-        if(!_interact || _currentInteractable == null)
+        if (!_interact || _currentInteractable == null)
             return;
         UpdateInteractionVFX(_currentInteractable.CurrentInteractDuration / _currentInteractable.InteractDuration);
         _currentInteractable.HandleInteraction(this);
@@ -535,7 +568,7 @@ public class PlayerCharacter : MonoBehaviour
         float size = (_raysPerSide - 1) * _wallCheckSpacing;
         Vector2 bottom = (Vector2)transform.position + _wallCheckOffset - Vector2.up * (size / 2);
 
-        for(int i = 0; i < _raysPerSide; i++)
+        for (int i = 0; i < _raysPerSide; i++)
         {
             Vector2 origin = bottom + Vector2.up * (i * _wallCheckSpacing);
             Gizmos.DrawLine(origin, origin + Vector2.right * _wallCheckDistance);
