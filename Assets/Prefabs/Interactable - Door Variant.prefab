@@ -117,7 +117,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -150,4 +150,5 @@ MonoBehaviour:
   _multipleInteraction: 0
   _visual: {fileID: 1420873613987030794}
   _hoverSprite: {fileID: -2071208970, guid: a33564a419f44894fb28775f1a3581bc, type: 3}
+  _interactionSound: {fileID: 11400000, guid: d57c29175ddfe47458f5b545857dc9dd, type: 2}
   _teleportOffset: {x: 0, y: -0.95}
