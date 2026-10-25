@@ -2,11 +2,15 @@ using UnityEngine;
 
 public class NPCController : MonoBehaviour
 {
+    [Header("Movement")]
     [SerializeField] float _moveSpeed = 7f;
     [SerializeField] NPCPathPoint _startPathPoint;
     [SerializeField] NPCPathPoint _endPatrolPathPoint;
     [SerializeField] float _patrolReachDistance = 0.5f;
     [SerializeField] float _idleTime = 2f;
+
+    [Header("View")]
+    [SerializeField] NPCView _npcView;
 
     [Header("VFX")]
     [SerializeField] SpriteRenderer _characterRenderer;
@@ -18,6 +22,7 @@ public class NPCController : MonoBehaviour
 
     public SpriteRenderer CharacterRenderer => _characterRenderer;
     public Animator Animator => _animator;
+    public NPCView NPCView => _npcView;
 
     NPCStateMachine _stateMachine;
 
@@ -44,5 +49,10 @@ public class NPCController : MonoBehaviour
     {
         Vector3 move = new Vector3(direction.x, direction.y, 0) * _moveSpeed * elapsedTime;
         this.transform.Translate(move, Space.World);
+    }
+
+    public bool SeePlayer()
+    {
+        return _npcView.CharacterTarget != null;
     }
 }

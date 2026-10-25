@@ -2,15 +2,23 @@ using UnityEngine;
 
 public class NPCView : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    PlayerCharacter _characterTarget;
+
+    public PlayerCharacter CharacterTarget => _characterTarget;
+
+    void OnTriggerEnter2D(Collider2D other) 
     {
-        
+        if(other.attachedRigidbody != null && other.attachedRigidbody.CompareTag("Player"))
+        {
+            _characterTarget = other.attachedRigidbody.GetComponent<PlayerCharacter>();
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    void OnTriggerExit2D(Collider2D other) 
     {
-        
+        if(other.attachedRigidbody != null && other.attachedRigidbody.CompareTag("Player"))
+        {
+            _characterTarget = null;
+        }
     }
 }

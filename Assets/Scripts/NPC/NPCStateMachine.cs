@@ -160,3 +160,30 @@ public class NPCPatrolState : NPCState
         return currentTarget;
     }
 }
+
+public class NPCFollowPlayer : NPCState
+{
+    public NPCFollowPlayer(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) {}
+
+    public override void Enter()
+    {
+        m_controller.Animator.SetBool("Running", true);
+    }
+
+    public override void Update(float deltaTime)
+    {
+        if(m_controller.SeePlayer())
+        {
+            // Move closer to the player by using the NPCPathPoints (NPCController has access to points from it's starting point)
+        }
+        else
+        {
+            m_stateMachine.ChangeState(m_stateMachine.IdleState);
+        }
+    }
+
+    public override void Exit()
+    {
+        m_controller.Animator.SetBool("Running", false);
+    }
+}
