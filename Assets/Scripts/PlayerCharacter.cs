@@ -15,6 +15,13 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] ParticleSystem _jumpBoostVFX;
     [SerializeField] ParticleSystem _grabWallVFX;
 
+
+    [Header("Sound Settings")]
+    [SerializeField] SoundSO _footstepsSound;
+    SoundObject _footsteps;
+    bool _footstepsPlaying;
+
+
     [Header("Movement Settings")]
     [SerializeField] float _moveSpeed = 10f;
     private Vector2 _moveInput;
@@ -114,6 +121,13 @@ public class PlayerCharacter : MonoBehaviour
         _normalGravity = (2f * _jumpHeight) / (_timeToApex * _timeToApex);
         _jumpVelocity = (2f * _jumpHeight) / _timeToApex;
 
+        if (_footstepsSound != null)
+        {
+            _footsteps = SoundManager.Instance.CreateSound(_footstepsSound);
+            _footsteps.transform.SetParent(transform, false);
+        }
+
+
     }
 
 
@@ -180,6 +194,9 @@ public class PlayerCharacter : MonoBehaviour
             _animatorController.IsJumping(_isJumping);
         }
 
+        HandleFootsteps();
+
+
         UpdateColor();
     }
 
@@ -241,6 +258,24 @@ public class PlayerCharacter : MonoBehaviour
 
 
     }
+
+    void HandleFootsteps()
+    {
+        if (_footsteps == null)
+            return;
+
+        // Walking on the ground, and not paused by a modal
+        bool walking = _isGrounded && Mathf.Abs(_rigidbody2D.linearVelocity.x) > 0.1f && Time.timeScale > 0f;
+        if (walking == _footstepsPlaying)
+            return;
+
+        _footstepsPlaying = walking;
+        if (walking)
+            _footsteps.Play();
+        else
+            _footsteps.Stop();
+    }
+
 
 
     public void MoveInput(Vector2 moveInput)
@@ -429,7 +464,7 @@ public class PlayerCharacter : MonoBehaviour
         _characterCollider.enabled = !isCat;
         _catCollider.enabled = isCat;
 
-        if(isCat)
+        if (isCat)
         {
             // Reset timers of abilities
             _jumpBoostMultiplier = 1f;
@@ -491,7 +526,7 @@ public class PlayerCharacter : MonoBehaviour
     {
         Interactable hoverInteractable = GetClosestInteractable();
 
-        if(_isInCat)
+        if (_isInCat)
             hoverInteractable = null;
 
         if (hoverInteractable == _hoverInteractable)

@@ -11203,6 +11203,7 @@ MonoBehaviour:
   _spriteRenderer: {fileID: 5627608691942390013}
   _jumpBoostVFX: {fileID: 2140252551934737426}
   _grabWallVFX: {fileID: 4530414144554210792}
+  _footstepsSound: {fileID: 0}
   _moveSpeed: 5
   _jumpHeight: 2
   _timeToApex: 0.5

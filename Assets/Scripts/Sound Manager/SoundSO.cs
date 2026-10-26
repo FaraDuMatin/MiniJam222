@@ -30,6 +30,8 @@ public class SoundSO : ScriptableObject
     public float SpatialBlend => _spatialBlend;
     public bool OneShot => _oneshot;
     public bool IgnorePause => _ignorePause;
+    public bool Loop => _loop;
+
 
     public bool TryGetNextClip(int currentIndex, out int nextIndex, out AudioClip nextClip)
     {
@@ -40,7 +42,7 @@ public class SoundSO : ScriptableObject
         if (!_isPlaylist)
         {
             // Are we looping and if yes is our index superior or equal to 0 (already played)
-            if (!_loop && currentIndex >= 0) 
+            if (!_loop && currentIndex >= 0)
                 return false;
 
             nextIndex = 0;
@@ -82,7 +84,7 @@ public class SoundSO : ScriptableObject
     {
         return Random.Range(_pitchRange.x, _pitchRange.y);
     }
-    
+
     public SoundObject Play()
     {
         return SoundManager.Instance.CreateSound(this);

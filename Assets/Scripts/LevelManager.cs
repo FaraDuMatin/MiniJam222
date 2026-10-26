@@ -4,7 +4,7 @@ using TMPro;
 
 public class LevelManager : MonoBehaviour
 {
-    public static LevelManager Instance { private set; get; } 
+    public static LevelManager Instance { private set; get; }
 
     [Header("Money Settings")]
     [SerializeField] int _targetMoney = 100;
@@ -12,6 +12,10 @@ public class LevelManager : MonoBehaviour
     [SerializeField] TMP_Text _moneyText;
 
     public bool HasEnoughMoney => _currentMoney >= _targetMoney;
+    public int TargetMoney => _targetMoney;
+    public int CurrentMoney => _currentMoney;
+
+
 
     void Awake()
     {
@@ -30,12 +34,21 @@ public class LevelManager : MonoBehaviour
     {
         _moneyText.text = _currentMoney + " / " + _targetMoney;
     }
-    
+
     public void AddMoney(int amount)
     {
         _currentMoney += amount;
         UpdateMoneyVisual();
     }
+
+    public void RestartLevel()
+    {
+        // The ability modal may have paused the game
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+
 
     public void LoadNextLevel()
     {

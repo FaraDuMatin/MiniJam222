@@ -30,21 +30,21 @@ public class NPCStateMachine
 
     public void ChangeState(NPCState newState)
     {
-        if(_currentState != null)
+        if (_currentState != null)
             _currentState.Exit();
 
         _currentState = newState;
 
-        if(newState != null)
+        if (newState != null)
             _currentState.Enter();
     }
 
     public void Update(float deltaTime)
     {
-        if(_currentState != _followPlayerState && _currentState != _intriguedState && _controller.SeePlayer())
+        if (_currentState != _followPlayerState && _currentState != _intriguedState && _controller.SeePlayer())
             ChangeState(_intriguedState);
 
-        if(_currentState != null)
+        if (_currentState != null)
             _currentState.Update(deltaTime);
     }
 }
@@ -79,9 +79,9 @@ public class NPCIdleState : NPCState
     public override void Update(float deltaTime)
     {
         _idleTimer += deltaTime;
-        if(_idleTimer >= m_controller.IdleTime)
+        if (_idleTimer >= m_controller.IdleTime)
         {
-            if(m_controller.HasPatrolBehaviour)
+            if (m_controller.HasPatrolBehaviour)
                 m_stateMachine.ChangeState(m_stateMachine.PatrolState);
             else
                 _idleTimer = 0f;
@@ -108,7 +108,7 @@ public class NPCPatrolState : NPCState
     {
         m_controller.HideMark();
 
-        if(!m_controller.HasPatrolBehaviour || m_controller.StartPathPoint == null || m_controller.EndPatrolPathPoint == null)
+        if (!m_controller.HasPatrolBehaviour || m_controller.StartPathPoint == null || m_controller.EndPatrolPathPoint == null)
         {
             m_stateMachine.ChangeState(m_stateMachine.IdleState);
             return;
@@ -117,12 +117,12 @@ public class NPCPatrolState : NPCState
         // Get the next patrol path point from the controller
         _patrolPathPoints.Clear();
         _currentPatrolIndex = 0;
-        
-        if(_currentPatrolTarget == null)
+
+        if (_currentPatrolTarget == null)
             _currentPatrolTarget = m_controller.EndPatrolPathPoint;
 
         List<INPCPathPoint> path = NPCPathManager.Instance.GetPathTo(m_controller.transform.position, _currentPatrolTarget);
-        if(path != null)
+        if (path != null)
             _patrolPathPoints.AddRange(path);
         else
         {
@@ -139,11 +139,11 @@ public class NPCPatrolState : NPCState
         m_controller.Move(direction, deltaTime);
 
         bool reachedPoint = m_controller.ReachedPoint(currentTarget);
-        if(reachedPoint)
+        if (reachedPoint)
         {
             _currentPatrolIndex++;
             currentTarget.EnterPosition(m_controller.transform);
-            if(_currentPatrolIndex >= _patrolPathPoints.Count)
+            if (_currentPatrolIndex >= _patrolPathPoints.Count)
             {
                 _currentPatrolTarget = LoopPatrol(_currentPatrolTarget);
                 m_stateMachine.ChangeState(m_stateMachine.IdleState);
@@ -160,9 +160,9 @@ public class NPCPatrolState : NPCState
 
     INPCPathPoint LoopPatrol(INPCPathPoint currentTarget)
     {
-        if(currentTarget.GetGameObject() == m_controller.EndPatrolPathPoint.GetGameObject())
+        if (currentTarget.GetGameObject() == m_controller.EndPatrolPathPoint.GetGameObject())
             return m_controller.StartPathPoint;
-        else if(currentTarget.GetGameObject() == m_controller.StartPathPoint.GetGameObject())
+        else if (currentTarget.GetGameObject() == m_controller.StartPathPoint.GetGameObject())
             return m_controller.EndPatrolPathPoint;
         return currentTarget;
     }
@@ -177,7 +177,7 @@ public class NPCFollowPlayer : NPCState
     Vector3 _approachPoint;
     float _replanTimer = 0f;
 
-    public NPCFollowPlayer(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) {}
+    public NPCFollowPlayer(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) { }
 
     public override void Enter()
     {
@@ -190,28 +190,28 @@ public class NPCFollowPlayer : NPCState
 
     public override void Update(float deltaTime)
     {
-        if(!m_controller.SeePlayer())
+        if (!m_controller.SeePlayer())
         {
             m_stateMachine.ChangeState(m_stateMachine.IdleState);
             return;
         }
 
-        if(m_controller.ReachedPlayer())
+        if (m_controller.ReachedPlayer())
         {
-            Vector2 directionToPlayer = ((Vector3)m_controller.PlayerPosition - m_controller.transform.position).normalized;
-            m_controller.Face(directionToPlayer);
+            LevelManager.Instance.RestartLevel();
             return;
         }
 
+
         _replanTimer -= deltaTime;
-        if(_replanTimer <= 0f)
+        if (_replanTimer <= 0f)
             Replan();
 
         Vector3 currentTarget = CurrentTargetPosition();
         Vector2 direction = ((Vector3)currentTarget - m_controller.transform.position).normalized;
         m_controller.Move(direction, deltaTime);
 
-        if(_currentIndex < _pathToPlayer.Count && m_controller.ReachedPoint(_pathToPlayer[_currentIndex]))
+        if (_currentIndex < _pathToPlayer.Count && m_controller.ReachedPoint(_pathToPlayer[_currentIndex]))
         {
             _pathToPlayer[_currentIndex].EnterPosition(m_controller.transform);
             _currentIndex++;
@@ -232,7 +232,7 @@ public class NPCFollowPlayer : NPCState
         // waiting to fully arrive at the last node first - otherwise the NPC can
         // face away from the player while walking to that node and lose sight of them.
         bool onFinalLeg = _currentIndex >= _pathToPlayer.Count - 1;
-        if(!onFinalLeg)
+        if (!onFinalLeg)
             return _pathToPlayer[_currentIndex].GetPosition();
         return _approachPoint;
     }
@@ -252,7 +252,7 @@ public class NPCIntriguedState : NPCState
 {
     float _timer;
 
-    public NPCIntriguedState(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) {}
+    public NPCIntriguedState(NPCController controller, NPCStateMachine stateMachine) : base(controller, stateMachine) { }
 
     public override void Enter()
     {
@@ -265,7 +265,7 @@ public class NPCIntriguedState : NPCState
 
     public override void Update(float deltaTime)
     {
-        if(!m_controller.SeePlayer())
+        if (!m_controller.SeePlayer())
         {
             m_stateMachine.ChangeState(m_stateMachine.IdleState);
             return;
@@ -279,7 +279,7 @@ public class NPCIntriguedState : NPCState
 
         m_controller.UpdateIntriguedFill(_timer / m_controller.DetectionTime);
 
-        if(_timer >= m_controller.DetectionTime)
+        if (_timer >= m_controller.DetectionTime)
             m_stateMachine.ChangeState(m_stateMachine.FollowPlayerState);
     }
 

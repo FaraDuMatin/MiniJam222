@@ -6,10 +6,12 @@ public class LevelExit : Interactable
     {
         if (!LevelManager.Instance.HasEnoughMoney)
         {
+            AbilityModal.Instance.ShowMessage("Getaway Driver", "You need " + LevelManager.Instance.TargetMoney + " coins or I'm not driving off!");
             StopInteract();
             return;
         }
 
-        LevelManager.Instance.LoadNextLevel();
+        WinScreen.Instance.Show(LevelManager.Instance.CurrentMoney);
+
     }
 }

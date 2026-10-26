@@ -9,7 +9,7 @@ public class Interactable : MonoBehaviour
     [SerializeField] bool _multipleInteraction = false;
     bool _hasCompletedInteraction = false;
     bool _isInteracted = false;
-    protected PlayerCharacter m_interactingCharacter; 
+    protected PlayerCharacter m_interactingCharacter;
 
     [Header("Visual Settings")]
     [SerializeField] SpriteRenderer _visual;
@@ -30,18 +30,21 @@ public class Interactable : MonoBehaviour
 
     void Update()
     {
-        if(!_isInteracted)
+        if (!_isInteracted)
             return;
 
         _currentInteractDuraction += Time.deltaTime;
-        if(_currentInteractDuraction >= _interactDuration)
+        if (_currentInteractDuraction >= _interactDuration)
         {
-            if(!_multipleInteraction && _hasCompletedInteraction)
+            if (!_multipleInteraction && _hasCompletedInteraction)
                 return;
             _hasCompletedInteraction = true;
 
-            SoundObject sound = SoundManager.Instance.CreateSound(_interactionSound);
-            sound.transform.position = this.transform.position;
+            if (_interactionSound != null)
+            {
+                SoundObject sound = SoundManager.Instance.CreateSound(_interactionSound);
+                sound.transform.position = this.transform.position;
+            }
             CompleteInteract();
         }
     }
@@ -55,7 +58,7 @@ public class Interactable : MonoBehaviour
 
     public virtual void HandleInteraction(PlayerCharacter character)
     {
-        
+
     }
 
     public void StopInteract()
@@ -67,7 +70,7 @@ public class Interactable : MonoBehaviour
 
     protected virtual void CompleteInteract()
     {
-        
+
     }
 
     public virtual void StartHover()

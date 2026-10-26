@@ -87,6 +87,7 @@ MonoBehaviour:
   _multipleInteraction: 0
   _visual: {fileID: 6825049664551053528}
   _hoverSprite: {fileID: 8450231040188592775, guid: 0e7c63deaf52c2446a84ac36ec8e5a9a, type: 3}
+  _interactionSound: {fileID: 11400000, guid: 1d466846e4da419458c96fe2a6bbbef6, type: 2}
   _moneyValue: 1
 --- !u!212 &6825049664551053528 stripped
 SpriteRenderer:

@@ -147,7 +147,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Door
   _collider: {fileID: 5422827111040285295}
   _interactDuration: 0
-  _multipleInteraction: 0
+  _multipleInteraction: 1
   _visual: {fileID: 1420873613987030794}
   _hoverSprite: {fileID: -2071208970, guid: a33564a419f44894fb28775f1a3581bc, type: 3}
   _interactionSound: {fileID: 11400000, guid: d57c29175ddfe47458f5b545857dc9dd, type: 2}

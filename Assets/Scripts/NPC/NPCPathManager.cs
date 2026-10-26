@@ -33,7 +33,11 @@ public class NPCPathManager : MonoBehaviour
 
         foreach (var point in _pathPoints)
         {
-            float dist = Vector3.Distance(point.GetPosition(), position);
+            // Guards never use doors, and prefer points on their own floor
+            if (IsDoorNode(point))
+                continue;
+            float dist = Vector3.Distance(point.GetPosition(), position) + Mathf.Abs(point.GetPosition().y - position.y) * 10f;
+
             if (dist < closestDist)
             {
                 closestDist = dist;
@@ -136,6 +140,10 @@ public class NPCPathManager : MonoBehaviour
         {
             foreach (var neighbor in point.GetNeighbors())
             {
+                // Door links jump between floors: walking along them makes guards fly
+                if (IsDoorNode(point) || IsDoorNode(neighbor))
+                    continue;
+
                 Vector3 closest = ClosestPointOnSegment(point.GetPosition(), neighbor.GetPosition(), target);
                 float dist = Vector3.Distance(closest, target);
                 if (dist < bestDist)
@@ -162,6 +170,13 @@ public class NPCPathManager : MonoBehaviour
         GraphApproach approach = GetClosestPointOnGraph(targetPosition);
         approachPoint = approach.Position;
         return FindPath(start, approach.From);
+    }
+
+
+    // Doors, and the stand-in points a DoorLinker creates for them
+    static bool IsDoorNode(INPCPathPoint point)
+    {
+        return point is Door || point.GetGameObject().name.EndsWith("_DoorPathPoint");
     }
 
 

@@ -24,6 +24,12 @@ public class NPCController : MonoBehaviour
     [SerializeField] Color _questionColor;
     [SerializeField] Color _questionBackgroundColor;
 
+
+    [Header("Sound")]
+    [SerializeField] SoundSO _questionSound;
+    [SerializeField] SoundSO _alertSound;
+
+
     [SerializeField] Sprite _exclamationMarkSprite;
     [SerializeField] Color _exclamationColor;
     [SerializeField] Color _exclamationBackgroundColor;
@@ -40,14 +46,14 @@ public class NPCController : MonoBehaviour
     public float DetectionTime => _detectionTime;
     public float CatDetectionMultiplier => _catDetectionMultiplier;
     public bool PlayerIsCat => _npcView.CharacterTarget != null && _npcView.CharacterTarget.IsInCat;
-    
+
     NPCStateMachine _stateMachine;
 
     public bool HasPatrolBehaviour => _startPathPoint != null && _endPatrolPathPoint != null;
 
     void Awake()
     {
-        if(_startPathPoint != null)
+        if (_startPathPoint != null)
             this.transform.position = _startPathPoint.GetPosition();
         _stateMachine = new NPCStateMachine(this);
 
@@ -78,7 +84,7 @@ public class NPCController : MonoBehaviour
 
     public void Face(Vector2 direction)
     {
-        if(direction.x == 0)
+        if (direction.x == 0)
             return;
         _characterRenderer.flipX = direction.x < 0;
         _npcView.Flip(direction.x < 0);
@@ -106,9 +112,11 @@ public class NPCController : MonoBehaviour
     {
         _intriguedRenderer.sprite = _questionMarkSprite;
         _intriguedRenderer.color = _questionColor;
-        
+
         _intriguedBackgroundRenderer.sprite = _questionMarkSprite;
         _intriguedBackgroundRenderer.color = _questionBackgroundColor;
+        PlaySound(_questionSound);
+
     }
 
     public void ExclamationMark()
@@ -118,9 +126,18 @@ public class NPCController : MonoBehaviour
 
         _intriguedBackgroundRenderer.sprite = _exclamationMarkSprite;
         _intriguedBackgroundRenderer.color = _exclamationBackgroundColor;
+        PlaySound(_alertSound);
+
     }
 
     public Vector3 PlayerPosition => _npcView.CharacterTarget.transform.position;
+
+    void PlaySound(SoundSO sound)
+    {
+        if (sound == null)
+            return;
+        sound.Play().transform.position = transform.position;
+    }
 
     public bool ReachedPlayer()
     {

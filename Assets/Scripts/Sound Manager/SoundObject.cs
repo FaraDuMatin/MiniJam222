@@ -4,7 +4,7 @@ public enum SoundState
 {
     Idle,
     Playing,
-    Paused, 
+    Paused,
     InDestruction
 }
 
@@ -21,13 +21,13 @@ public class SoundObject : MonoBehaviour
     {
         _audioSource.playOnAwake = false;
         SelfSetSoundSO();
-        if(SoundManager.Instance != null)
+        if (SoundManager.Instance != null)
             SoundManager.Instance.RegisterSoundObject(this);
     }
 
     private void OnDestroy()
     {
-        if(SoundManager.Instance != null)
+        if (SoundManager.Instance != null)
             SoundManager.Instance.UnregisterSoundObject(this);
     }
 
@@ -45,19 +45,21 @@ public class SoundObject : MonoBehaviour
         _audioSource.spatialBlend = _soundSO.SpatialBlend;
         _audioSource.outputAudioMixerGroup = _soundSO.OutputGroup;
         _audioSource.ignoreListenerPause = _soundSO.IgnorePause; // UI sounds keep playing during the pause
+        _audioSource.loop = _soundSO.Loop && !_soundSO.IsPlaylist; // Single looping clip
+
 
         _clipIndex = -1; // Reset the clip index when setting a new SoundSO
         bool hasNextClip = _soundSO.TryGetNextClip(_clipIndex, out _clipIndex, out AudioClip nextClip);
-        if(hasNextClip)
+        if (hasNextClip)
             _audioSource.clip = nextClip;
 
-        if(_soundSO.PlayOnAwake)
+        if (_soundSO.PlayOnAwake)
             Play();
     }
 
     void SelfSetSoundSO()
     {
-        if(_soundSO == null)
+        if (_soundSO == null)
             return;
         SetSoundSO(_soundSO);
     }
@@ -77,7 +79,7 @@ public class SoundObject : MonoBehaviour
         }
         else // Loop or a playlist
         {
-            if(_soundSO.TryGetNextClip(_clipIndex, out _clipIndex, out AudioClip nextClip))
+            if (_soundSO.TryGetNextClip(_clipIndex, out _clipIndex, out AudioClip nextClip))
             {
                 _audioSource.clip = nextClip;
                 Play();
@@ -91,9 +93,9 @@ public class SoundObject : MonoBehaviour
 
     public void Play()
     {
-        if(_state == SoundState.InDestruction) // Prevent further interaction if is going to be destroyed by it's clock
+        if (_state == SoundState.InDestruction) // Prevent further interaction if is going to be destroyed by it's clock
             return;
-        
+
         // Get a new pitch
         _audioSource.pitch = _soundSO.Pitch;
 
@@ -103,7 +105,7 @@ public class SoundObject : MonoBehaviour
 
     public void Stop()
     {
-        if(_state == SoundState.InDestruction) // Prevent further interaction if is going to be destroyed by it's clock
+        if (_state == SoundState.InDestruction) // Prevent further interaction if is going to be destroyed by it's clock
             return;
 
         _audioSource.Stop();
@@ -119,22 +121,22 @@ public class SoundObject : MonoBehaviour
 
     public void Pause()
     {
-        if(_state == SoundState.InDestruction) // Prevent further interaction if is going to be destroyed by it's clock
+        if (_state == SoundState.InDestruction) // Prevent further interaction if is going to be destroyed by it's clock
             return;
-        
+
         _audioSource.Pause();
         _state = SoundState.Paused;
     }
 
     public void Resume()
     {
-        if(_state != SoundState.Paused)
+        if (_state != SoundState.Paused)
             return;
-        
+
         _audioSource.UnPause();
         _state = SoundState.Playing;
     }
-    
+
     public void SetVolume(float volume)
     {
         _audioSource.volume = volume;
